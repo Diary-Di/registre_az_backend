@@ -27,9 +27,6 @@ class UniteOrg(models.Model):
 
 
 class Utilisateur(AbstractBaseUser):
-    password = None
-    last_login = None
-
     id = models.BigAutoField(primary_key=True)
     identifiant = models.TextField(unique=True)
     unite = models.ForeignKey('users.UniteOrg', models.DO_NOTHING)
