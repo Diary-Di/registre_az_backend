@@ -1,10 +1,12 @@
+from django.contrib.auth.base_user import AbstractBaseUser
 from django.db import models
+from django.utils import timezone
 
 
 class Organisme(models.Model):
     id = models.BigAutoField(primary_key=True)
     nom = models.TextField()
-    actif = models.BooleanField()
+    actif = models.BooleanField(db_default=True)
 
     class Meta:
         managed = False
@@ -17,20 +19,31 @@ class UniteOrg(models.Model):
     nom = models.TextField()
     parent = models.ForeignKey('self', models.DO_NOTHING, blank=True, null=True)
     responsable = models.ForeignKey('users.Utilisateur', models.DO_NOTHING, blank=True, null=True)
-    active = models.BooleanField()
+    active = models.BooleanField(db_default=True)
 
     class Meta:
         managed = False
         db_table = 'unite_org'
 
 
-class Utilisateur(models.Model):
+class Utilisateur(AbstractBaseUser):
+    password = None
+    last_login = None
+
     id = models.BigAutoField(primary_key=True)
     identifiant = models.TextField(unique=True)
     unite = models.ForeignKey('users.UniteOrg', models.DO_NOTHING)
     statut = models.TextField()
-    mfa_actif = models.BooleanField()
+    mfa_actif = models.BooleanField(db_default=False)
     date_fin = models.DateField(blank=True, null=True)
+
+    USERNAME_FIELD = 'identifiant'
+
+    @property
+    def is_active(self):
+        return self.statut == 'actif' and (
+            self.date_fin is None or self.date_fin > timezone.localdate()
+        )
 
     class Meta:
         managed = False

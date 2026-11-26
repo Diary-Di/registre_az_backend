@@ -209,7 +209,8 @@ CREATE TABLE piece_jointe (
     objet_stockage TEXT NOT NULL,
     empreinte CHAR(64) NOT NULL,
     type TEXT NOT NULL,
-    niveau SMALLINT NOT NULL CHECK (niveau BETWEEN 0 AND 4)
+    niveau SMALLINT NOT NULL CHECK (niveau BETWEEN 0 AND 4),
+    taille BIGINT
 );
 
 -- -----------------------------------------------------------------------------

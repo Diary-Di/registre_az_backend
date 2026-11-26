@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models.functions import Now
 
 
 class Dossier(models.Model):
@@ -68,6 +69,7 @@ class PieceJointe(models.Model):
     empreinte = models.CharField(max_length=64)
     type = models.TextField()
     niveau = models.SmallIntegerField()
+    taille = models.BigIntegerField(null=True)
 
     class Meta:
         managed = False
@@ -80,7 +82,7 @@ class Version(models.Model):
     numero = models.IntegerField()
     contenu = models.TextField()
     auteur = models.ForeignKey('users.Utilisateur', models.DO_NOTHING)
-    horodatage = models.DateTimeField()
+    horodatage = models.DateTimeField(db_default=Now())
     motif = models.TextField(blank=True, null=True)
 
     class Meta:
@@ -95,7 +97,7 @@ class Validation(models.Model):
     version = models.ForeignKey('dossiers.Version', models.DO_NOTHING)
     decision = models.TextField()
     reviseur = models.ForeignKey('users.Utilisateur', models.DO_NOTHING)
-    date = models.DateTimeField()
+    date = models.DateTimeField(db_default=Now())
     commentaire = models.TextField(blank=True, null=True)
 
     class Meta:
@@ -108,7 +110,7 @@ class Diffusion(models.Model):
     renseignement = models.ForeignKey('dossiers.Renseignement', models.DO_NOTHING)
     version = models.ForeignKey('dossiers.Version', models.DO_NOTHING)
     destinataire = models.TextField()
-    date = models.DateTimeField()
+    date = models.DateTimeField(db_default=Now())
     canal = models.TextField(blank=True, null=True)
     motif = models.TextField(blank=True, null=True)
 

@@ -1,11 +1,12 @@
 from django.db import models
+from django.db.models.functions import Now
 
 
 class Compartiment(models.Model):
     id = models.BigAutoField(primary_key=True)
     code = models.TextField(unique=True)
     responsable = models.ForeignKey('users.Utilisateur', models.DO_NOTHING, blank=True, null=True)
-    actif = models.BooleanField()
+    actif = models.BooleanField(db_default=True)
 
     class Meta:
         managed = False
@@ -91,7 +92,7 @@ class JournalAcces(models.Model):
     action = models.TextField()
     type_objet = models.TextField()
     objet_id = models.BigIntegerField(blank=True, null=True)
-    horodatage = models.DateTimeField()
+    horodatage = models.DateTimeField(db_default=Now())
     resultat = models.TextField()
     contexte = models.JSONField(blank=True, null=True)
 
