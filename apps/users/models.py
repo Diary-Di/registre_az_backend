@@ -1,4 +1,4 @@
-from django.contrib.auth.base_user import AbstractBaseUser
+from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.db import models
 from django.utils import timezone
 
@@ -34,6 +34,7 @@ class Utilisateur(AbstractBaseUser):
     mfa_actif = models.BooleanField(db_default=False)
     date_fin = models.DateField(blank=True, null=True)
 
+    objects = BaseUserManager()
     USERNAME_FIELD = 'identifiant'
 
     @property
