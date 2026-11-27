@@ -45,6 +45,16 @@ def _en_cours(now):
     return Q(debut__lte=now) & (Q(fin__isnull=True) | Q(fin__gt=now))
 
 
+def niveau_habilitation(user):
+    """Niveau d'habilitation maximal en vigueur, ou None si aucune."""
+    hab = (
+        Habilitation.objects.filter(_en_cours(timezone.now()), utilisateur=user)
+        .order_by("-niveau_max")
+        .first()
+    )
+    return hab.niveau_max if hab else None
+
+
 def evaluer_acces(user, dossier, action, niveau_objet=None):
     """Lève Refus si l'une des 7 conditions échoue, sinon retourne None."""
     now = timezone.now()
@@ -63,12 +73,8 @@ def evaluer_acces(user, dossier, action, niveau_objet=None):
         raise Refus(2, "aucun rôle n'autorise cette action")
 
     # 3. Habilitation >= niveau de l'objet
-    hab = (
-        Habilitation.objects.filter(_en_cours(now), utilisateur=user)
-        .order_by("-niveau_max")
-        .first()
-    )
-    if hab is None or hab.niveau_max < niveau:
+    plafond = niveau_habilitation(user)
+    if plafond is None or plafond < niveau:
         raise Refus(3, "habilitation insuffisante")
 
     # 4. Compartiments compatibles (sans objet si le dossier n'en a pas)
@@ -112,8 +118,12 @@ def journaliser(user, action, type_objet, objet_id, autorise, contexte=None):
 
 
 def verifier_acces(user, dossier, action, type_objet="dossier",
-                   objet_id=None, niveau_objet=None):
-    """Retourne True/False et journalise (refus toujours, succès selon l'action)."""
+                   objet_id=None, niveau_objet=None, journaliser_succes=True):
+    """Retourne True/False et journalise (refus toujours, succès selon l'action).
+
+    journaliser_succes=False : l'appelant écrira lui-même la ligne de succès
+    (ex. création, une fois l'identifiant du nouvel objet connu).
+    """
     objet_id = objet_id if objet_id is not None else dossier.id
     try:
         evaluer_acces(user, dossier, action, niveau_objet)
@@ -121,7 +131,7 @@ def verifier_acces(user, dossier, action, type_objet="dossier",
         journaliser(user, action, type_objet, objet_id, False,
                     {"condition": refus.condition, "dossier_id": dossier.id})
         return False
-    if action in ACTIONS_JOURNALISEES:
+    if journaliser_succes and action in ACTIONS_JOURNALISEES:
         journaliser(user, action, type_objet, objet_id, True,
                     {"dossier_id": dossier.id})
     return True
